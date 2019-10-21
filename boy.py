@@ -1,8 +1,7 @@
 from pico2d import *
 
 # Boy Event
-RIGHT_DOWN, LEFT_DOWN, RIGHT_UP, LEFT_UP, SLEEP_TIMER, \
-    RSHIFT_DOWN, LSHIFT_DOWN, RSHIFT_UP, LSHIFT_UP = range(9)
+RIGHT_DOWN, LEFT_DOWN, RIGHT_UP, LEFT_UP, SLEEP_TIMER, RSHIFT_DOWN, LSHIFT_DOWN, RSHIFT_UP, LSHIFT_UP = range(9)
 
 key_event_table = {
     (SDL_KEYDOWN, SDLK_RIGHT): RIGHT_DOWN,
@@ -86,16 +85,7 @@ class RunState:
 class DashState:
     @staticmethod
     def enter(boy, event):
-        if event == RSHIFT_DOWN:
-                boy.dash = 5
-                boy.timer = 50
-        elif event == LSHIFT_DOWN:
-                boy.dash = 5
-                boy.timer = 50
-        elif event == RSHIFT_UP:
-                boy.dash = 1
-        elif event == LSHIFT_UP:
-                boy.dash = 1
+        boy.timer_D = 50
 
     @staticmethod
     def exit(boy, event):
@@ -104,12 +94,11 @@ class DashState:
     @staticmethod
     def do(boy):
         boy.frame = (boy.frame + 1) % 8
-        boy.timer -= 1
-        boy.x += boy.velocity * boy.dash
+        boy.timer_D -= 1
+        boy.x += boy.velocity * 3
         boy.x = clamp(25, boy.x, 800 - 25)
 
-        if boy.timer == 0:
-            boy.add_event(RSHIFT_UP)
+        if boy.timer_D == 0:
             boy.add_event(LSHIFT_UP)
 
 
@@ -156,8 +145,8 @@ next_state_table = {
                  LEFT_UP: RunState, RIGHT_UP: RunState},
     DashState: {RIGHT_UP: IdleState, LEFT_UP: IdleState,
                 RIGHT_DOWN: IdleState, LEFT_DOWN: IdleState,
-                RSHIFT_DOWN: DashState, LSHIFT_DOWN: DashState,
-                RSHIFT_UP: RunState, LSHIFT_UP: RunState}
+                LSHIFT_DOWN: DashState, RSHIFT_DOWN: DashState,
+                LSHIFT_UP: RunState, RSHIFT_UP: RunState}
 
 }
 
@@ -174,13 +163,9 @@ class Boy:
         self.event_que = []
         self.cur_state = IdleState
         self.cur_state.enter(self, None)
-        pass
+        self.timer_D = 0
 
-    def change_state(self, state):
-        # fill here
-        pass
-
-    def update_state(self):
+    def update_state(self, state):
         if len(self.event_que) > 0:
             event = self.event_que.pop()
             self.cur_state.exit(self, event)
